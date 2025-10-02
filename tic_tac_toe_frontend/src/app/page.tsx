@@ -7,6 +7,12 @@ type Cell = Player | null;
 
 const INITIAL_BOARD: Cell[] = Array(9).fill(null);
 
+// Map players to chess-themed Unicode icons
+const PLAYER_ICON: Record<Player, string> = {
+  X: "♞", // Knight (horse)
+  O: "♛", // Queen
+};
+
 function calculateWinner(cells: Cell[]) {
   // All win lines for 3x3 Tic Tac Toe
   const lines = [
@@ -26,6 +32,12 @@ function calculateWinner(cells: Cell[]) {
     }
   }
   return { winner: null as Player | null, line: null as [number, number, number] | null };
+}
+
+// Helper to format a player name with its icon for ARIA and status display
+function formatPlayerWithIcon(p?: Player | null): string {
+  if (!p) return "";
+  return `${PLAYER_ICON[p]} (${p})`;
 }
 
 // PUBLIC_INTERFACE
@@ -85,10 +97,10 @@ export default function Home() {
   }, [winner, isDraw]);
 
   const statusText = winner
-    ? `Winner: ${winner}`
+    ? `Winner: ${formatPlayerWithIcon(winner)}`
     : isDraw
     ? "Draw"
-    : `Next player: ${currentPlayer}`;
+    : `Next player: ${formatPlayerWithIcon(currentPlayer)}`;
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
@@ -139,6 +151,7 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-lg border border-blue-600/20 bg-blue-50/60 px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-blue-700/80">
+                  {/* Label remains for clarity */}
                   X
                 </div>
                 <div className="text-lg font-semibold text-[#111827]">
@@ -174,11 +187,15 @@ export default function Home() {
               {board.map((value, idx) => {
                 const highlight = line?.includes(idx) ?? false;
                 const isActive = value === null && !winner;
+                const displayIcon = value ? PLAYER_ICON[value] : "";
+                const iconColor =
+                  value === "X" ? "#2563EB" : value === "O" ? "#F59E0B" : "#111827";
+
                 return (
                   <button
                     key={idx}
                     role="gridcell"
-                    aria-label={`Cell ${idx + 1}${value ? ` contains ${value}` : ""}`}
+                    aria-label={`Cell ${idx + 1}${value ? ` contains ${formatPlayerWithIcon(value)}` : ""}`}
                     aria-disabled={!isActive}
                     onClick={() => handleCellClick(idx)}
                     className={[
@@ -193,19 +210,14 @@ export default function Home() {
                         : "border-black/10",
                     ].join(" ")}
                     style={{
-                      color:
-                        value === "X"
-                          ? "#2563EB" // primary blue
-                          : value === "O"
-                          ? "#F59E0B" // amber
-                          : "#111827",
+                      color: iconColor,
                       background:
                         value && highlight
                           ? "linear-gradient(to bottom right, rgba(245,158,11,0.08), rgba(17,24,39,0.02))"
                           : "white",
                     }}
                   >
-                    <span className="drop-shadow-sm">{value ?? ""}</span>
+                    <span className="drop-shadow-sm">{displayIcon}</span>
                   </button>
                 );
               })}
@@ -232,7 +244,7 @@ export default function Home() {
                     currentPlayer === "X" ? "text-blue-700 font-semibold" : "text-amber-600 font-semibold"
                   }
                 >
-                  {currentPlayer}
+                  {PLAYER_ICON[currentPlayer]}
                 </span>
                 .
               </div>
